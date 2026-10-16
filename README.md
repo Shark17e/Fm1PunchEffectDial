@@ -12,7 +12,7 @@ SLOOP (2.7 and newer) plays the FM-1's 27 punch-in effects from MIDI: notes **F3
 
 ### Pages
 
-The round screen is a set of pages. On the **FX page** the encoder selects the punch-in effect; on every other page the encoder scrolls the pages (wrapping back to the FX page).
+The round screen is a set of pages. **Button A (a short press of the encoder button)** moves to the next page, wrapping around (FX → FILTER → ... → CONFIG → FX). The encoder does what the page is about: it scrolls the punch-in effects, changes the parameter pair, or changes a channel.
 
 | Page | Controls |
 |---|---|
@@ -38,7 +38,7 @@ The round screen is a set of pages. On the **FX page** the encoder selects the p
 | Rotate the encoder | Scroll through the 27 effects |
 | Tap the outer ring | Jump to the effect at that position |
 | Swipe left/right on the ring | Previous / next effect |
-| Swipe up/down on the ring | Next / previous page |
+| Button A (short press) | Next page |
 | Hold the encoder button 1 s | **PANIC**: all 27 effects off, HOLD released |
 
 ### Parameter pages (the XY pad)
@@ -48,11 +48,12 @@ The finger position is the value: **X** is the left value (red), **Y** is the up
 | Gesture | Action |
 |---|---|
 | Touch / drag | Set both values live from the position |
-| Release (no HOLD) | Both values are sent back to 0 (a ~300 ms grace to allow the double-tap) |
+| Release (no HOLD) | Both values are sent back to 0 immediately |
 | Double-tap | **HOLD**: the values stay on release |
 | Exit HOLD (double-tap) | The values stay; the next touch and release sends them to 0 again |
 | Tap the chip on top | Target: **SEL** (the track selected on the FM-1) / **T1** / **T2** / **T3** / **DR** |
-| Rotate the encoder | Previous / next page |
+| Rotate the encoder | Change the parameter pair: the Y value cycles through the other parameters |
+| Button A (short press) | Next page |
 
 ### TRANSPORT page
 
@@ -79,7 +80,7 @@ The MIDI channels used by the controller, saved in flash (they survive power cyc
 | TRACK 1/2/3 | CH 1 / 2 / 3 | GLO > MIDI > CH1 / CH2 / CH3 |
 | DRUMS | CH 10 | GLO > DRUMS > CH |
 
-Tap a row to select it; tap it again to increase the channel (1..16, wrapping).
+Tap a row to select it, then turn the encoder to change its channel (1..16, wrapping).
 
 ## Parameter CC map
 

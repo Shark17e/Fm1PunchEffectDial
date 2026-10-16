@@ -98,13 +98,10 @@ static float          padY        = 120.0f;
 static int8_t         activeTile  = -1;
 static bool           panicHeld   = false;
 static bool           padHold     = false;
-static unsigned long  padZeroAt   = 0;
 static unsigned long  padPressMs  = 0;
 static unsigned long  padLastRel  = 0;
 static bool           padLastShort = false;
 static bool           padPendDbl  = false;
-static uint8_t        padZeroP[2] = {0, 0};
-static uint8_t        padZeroTgt  = 0;
 
 static const int OUTBOX_MAX = 32;
 struct OutMsg { uint8_t note; bool on; };
@@ -289,12 +286,16 @@ static void drawParamPage() {
     }
     d.drawCircle(120, 120, 95, C_GRID);
 
-    d.drawLine(12, (int)padY, 228, (int)padY, C_RED_DIM);
-    d.drawLine((int)padX, 12, (int)padX, 228, C_RED_DIM);
-
     uint8_t p  = page - PG_1;
     uint8_t xi = PAGE_X[p];
     uint8_t yi = pageY[p];
+    uint8_t vx = ccVal[targetIdx][xi];
+    uint8_t vy = ccVal[targetIdx][yi];
+    float px = 32.0f + vx * 176.0f / 127.0f;
+    float py = 208.0f - vy * 176.0f / 127.0f;
+
+    d.drawLine(12, (int)py, 228, (int)py, C_RED_DIM);
+    d.drawLine((int)px, 12, (int)px, 228, C_RED_DIM);
 
     d.setTextDatum(middle_center);
     d.setFont(&fonts::Font2);
@@ -304,9 +305,9 @@ static void drawParamPage() {
 
     d.setFont(&fonts::Orbitron_Light_24);
     d.setTextColor(C_RED, TFT_BLACK);
-    d.drawString(String(ccVal[targetIdx][xi]), 56, 120);
+    d.drawString(String(vx), 56, 120);
     d.setTextColor(TFT_WHITE, TFT_BLACK);
-    d.drawString(String(ccVal[targetIdx][yi]), 184, 120);
+    d.drawString(String(vy), 184, 120);
 
     d.setFont(&fonts::Font2);
     d.setTextColor(C_RED_DIM, TFT_BLACK);
@@ -327,8 +328,8 @@ static void drawParamPage() {
     snprintf(cb, sizeof cb, "CH %u", tgtCh[targetIdx]);
     d.drawString(cb, 120, 58);
 
-    d.fillCircle((int)padX, (int)padY, 5, C_RED);
-    d.drawCircle((int)padX, (int)padY, 9, C_RED_DIM);
+    d.fillCircle((int)px, (int)py, 5, C_RED);
+    d.drawCircle((int)px, (int)py, 9, C_RED_DIM);
 }
 
 static void segFill(bool right, int band, uint16_t color) {
@@ -419,6 +420,13 @@ static void applyPad(bool force) {
     if (chg) redraw();
 }
 
+static void padZeroNow() {
+    uint8_t p = (uint8_t)(page - PG_1);
+    setVal(PAGE_X[p], 0);
+    setVal(pageY[p], 0);
+    redraw();
+}
+
 static void setCurIdxByIdx(int8_t idx, bool beep) {
     if (idx == curIdx) return;
     curIdx = idx;
@@ -442,6 +450,19 @@ static void stepFX(int8_t dir) {
     if (n < 0) n = FX_COUNT - 1;
     if (n >= FX_COUNT) n = 0;
     setCurIdxByIdx(n, true);
+}
+
+static void stepY(int8_t dir) {
+    uint8_t p  = page - PG_1;
+    uint8_t xi = PAGE_X[p];
+    uint8_t n  = pageY[p];
+    for (int k = 0; k < 11; k++) {
+        n = (uint8_t)((n + dir + 11) % 11);
+        if (n != xi) break;
+    }
+    pageY[p] = n;
+    tick();
+    redraw();
 }
 
 static void stepPage(int8_t dir) {
@@ -579,7 +600,6 @@ static void handleParamPage() {
             redraw();
         } else if (pdist < 112.0f) {
             padActive = true;
-            padZeroAt = 0;
             padPressMs = millis();
             padPendDbl = padLastShort && padLastRel != 0 && (padPressMs - padLastRel) <= GAP_MAX;
             padX = constrain(rx, 32.0f, 208.0f);
@@ -616,28 +636,12 @@ static void handleParamPage() {
             if (padPendDbl && wasShort) {
                 padHold = !padHold;
                 if (padHold) beepLatch(); else beepUnlatch();
-                padZeroAt = 0;
                 redraw();
             } else if (!padHold) {
-                uint8_t pp = (uint8_t)(page - PG_1);
-                padZeroP[0] = PAGE_X[pp];
-                padZeroP[1] = pageY[pp];
-                padZeroTgt = targetIdx;
-                padZeroAt = now + GAP_MAX;
+                padZeroNow();
             }
             padPendDbl = false;
         }
-    }
-}
-
-static void pollPadZero() {
-    if (padZeroAt && !padHold && (long)(millis() - padZeroAt) >= 0) {
-        padZeroAt = 0;
-        ccVal[padZeroTgt][padZeroP[0]] = 0;
-        ccPush(tgtCh[padZeroTgt], PDEF[padZeroP[0]].cc, 0);
-        ccVal[padZeroTgt][padZeroP[1]] = 0;
-        ccPush(tgtCh[padZeroTgt], PDEF[padZeroP[1]].cc, 0);
-        redraw();
     }
 }
 
@@ -674,26 +678,10 @@ static void handleCfgPage() {
     if (r.y < 48 || r.y > 188) return;
     int i = ((int)r.y - 48) / 20;
     if (i > 6) i = 6;
-    if (i == cfgSel) cfgEdit(+1);
-    else cfgSelect(i);
+    cfgSelect(i);
 }
 
 static void handleTouch() {
-    auto t = M5Dial.Touch.getDetail();
-
-    if (page == PG_FX && t.wasFlicked()) {
-        float bx = t.base_x - CX, by = t.base_y - CY;
-        float bdist = sqrtf(bx * bx + by * by);
-        float mdx = t.distanceX(), mdy = t.distanceY();
-        if (bdist >= 75.0f && fabsf(mdy) > fabsf(mdx) && fabsf(mdy) >= 40.0f) {
-            if (touchActive) releaseAction();
-            chipArmed = false;
-            padActive = false;
-            stepPage(mdy < 0.0f ? +1 : -1);
-            return;
-        }
-    }
-
     switch (page) {
     case PG_FX:
         handleFxTouch();
@@ -719,12 +707,14 @@ static void pollEncoder() {
     while (encAccum >= ENC_COUNTS_PER_DETENT) {
         encAccum -= ENC_COUNTS_PER_DETENT;
         if (page == PG_FX) stepFX(+1);
-        else stepPage(+1);
+        else if (page >= PG_1 && page <= PG_6) stepY(+1);
+        else if (page == PG_CFG) cfgEdit(+1);
     }
     while (encAccum <= -ENC_COUNTS_PER_DETENT) {
         encAccum += ENC_COUNTS_PER_DETENT;
         if (page == PG_FX) stepFX(-1);
-        else stepPage(-1);
+        else if (page >= PG_1 && page <= PG_6) stepY(-1);
+        else if (page == PG_CFG) cfgEdit(-1);
     }
 }
 
@@ -754,6 +744,10 @@ void setup() {
     while (true) {
         M5Dial.update();
         if (M5Dial.Touch.getDetail().wasClicked() || M5Dial.BtnA.wasPressed()) break;
+        delay(10);
+    }
+    while (M5Dial.BtnA.isPressed()) {
+        M5Dial.update();
         delay(10);
     }
 
@@ -800,9 +794,11 @@ void loop() {
         M5Dial.Speaker.tone(300, 150);
         redraw();
     }
-    if (!M5Dial.BtnA.isPressed()) panicHeld = false;
+    if (M5Dial.BtnA.wasReleased()) {
+        if (!panicHeld) stepPage(+1);
+        panicHeld = false;
+    }
 
     handleTouch();
     pollEncoder();
-    pollPadZero();
 }
