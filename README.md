@@ -12,18 +12,18 @@ SLOOP (2.7 and newer) plays the FM-1's 27 punch-in effects from MIDI: notes **F3
 
 ### Pages
 
-The round screen is a set of pages. **Button A (a short press of the encoder button)** moves to the next page, wrapping around (FX → FILTER → ... → CONFIG → FX). The encoder does what the page is about: it scrolls the punch-in effects, changes the parameter pair, or changes a channel.
+The round screen is a set of pages. **Hold the encoder button and turn the encoder** to move between pages, both ways (FX → TRANSPORT → FILTER → ... → CONFIG → FX); a plain click does nothing. Without the button held, the encoder does what the page is about: it scrolls the punch-in effects, changes the parameter pair, or changes a channel.
 
 | Page | Controls |
 |---|---|
 | **FX** | the 27 punch-in effects |
+| **TRANSPORT** | PLAY, REC, OCT-, OCT+, reverb and echo THROW |
 | **FILTER** | CUT / RES |
 | **SPACE** | REV / DLY |
 | **MOTION** | CHOR / GLIDE |
 | **MIX** | LEVEL / PAN |
 | **ENV** | ATK / DEC |
 | **RELEASE** | REL / GLIDE |
-| **TRANSPORT** | PLAY, REC, OCT-, OCT+, reverb and echo THROW |
 | **CONFIG** | the MIDI channels, saved on the device |
 
 ### FX page (the 27 punch-in effects)
@@ -38,8 +38,8 @@ The round screen is a set of pages. **Button A (a short press of the encoder but
 | Rotate the encoder | Scroll through the 27 effects |
 | Tap the outer ring | Jump to the effect at that position |
 | Swipe left/right on the ring | Previous / next effect |
-| Button A (short press) | Next page |
-| Hold the encoder button 1 s | **PANIC**: all 27 effects off, HOLD released |
+| Hold the button and turn the encoder | Move between pages (works on every page) |
+| Hold the button 1 s without turning | **PANIC**: all 27 effects off, HOLD released |
 
 ### Parameter pages (the XY pad)
 
@@ -53,7 +53,7 @@ The finger position is the value: **X** is the left value (red), **Y** is the up
 | Exit HOLD (double-tap) | The values stay; the next touch and release sends them to 0 again |
 | Tap the chip on top | Target: **SEL** (the track selected on the FM-1) / **T1** / **T2** / **T3** / **DR** |
 | Rotate the encoder | Change the parameter pair: the Y value cycles through the other parameters |
-| Button A (short press) | Next page |
+| Hold the button and turn the encoder | Move between pages |
 
 ### TRANSPORT page
 

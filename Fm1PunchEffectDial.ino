@@ -44,7 +44,7 @@ static const uint16_t C_RED_DIM  = 0x8800;
 static const uint16_t C_RED_FILL = 0x4000;
 static const uint16_t C_GRID     = 0x4208;
 
-enum { PG_FX = 0, PG_1, PG_2, PG_3, PG_4, PG_5, PG_6, PG_TR, PG_CFG, PG_COUNT };
+enum { PG_FX = 0, PG_TR, PG_1, PG_2, PG_3, PG_4, PG_5, PG_6, PG_CFG, PG_COUNT };
 static uint8_t page = PG_FX;
 
 struct ParamDef { uint8_t cc; const char* name; };
@@ -97,6 +97,7 @@ static float          padX        = 120.0f;
 static float          padY        = 120.0f;
 static int8_t         activeTile  = -1;
 static bool           panicHeld   = false;
+static bool           menuTurn    = false;
 static bool           padHold     = false;
 static unsigned long  padPressMs  = 0;
 static unsigned long  padLastRel  = 0;
@@ -706,13 +707,15 @@ static void pollEncoder() {
     encAccum += delta;
     while (encAccum >= ENC_COUNTS_PER_DETENT) {
         encAccum -= ENC_COUNTS_PER_DETENT;
-        if (page == PG_FX) stepFX(+1);
+        if (M5Dial.BtnA.isPressed()) { menuTurn = true; stepPage(+1); }
+        else if (page == PG_FX) stepFX(+1);
         else if (page >= PG_1 && page <= PG_6) stepY(+1);
         else if (page == PG_CFG) cfgEdit(+1);
     }
     while (encAccum <= -ENC_COUNTS_PER_DETENT) {
         encAccum += ENC_COUNTS_PER_DETENT;
-        if (page == PG_FX) stepFX(-1);
+        if (M5Dial.BtnA.isPressed()) { menuTurn = true; stepPage(-1); }
+        else if (page == PG_FX) stepFX(-1);
         else if (page >= PG_1 && page <= PG_6) stepY(-1);
         else if (page == PG_CFG) cfgEdit(-1);
     }
@@ -787,7 +790,7 @@ void loop() {
         redraw();
     }
 
-    if (M5Dial.BtnA.pressedFor(1000) && !panicHeld) {
+    if (M5Dial.BtnA.pressedFor(1000) && !panicHeld && !menuTurn) {
         panicHeld = true;
         panicAll();
         latchIdx = -1;
@@ -795,8 +798,8 @@ void loop() {
         redraw();
     }
     if (M5Dial.BtnA.wasReleased()) {
-        if (!panicHeld) stepPage(+1);
         panicHeld = false;
+        menuTurn = false;
     }
 
     handleTouch();
