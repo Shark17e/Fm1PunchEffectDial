@@ -44,7 +44,7 @@ static const uint16_t C_RED_DIM  = 0x8800;
 static const uint16_t C_RED_FILL = 0x4000;
 static const uint16_t C_GRID     = 0x4208;
 
-enum { PG_FX = 0, PG_TR, PG_1, PG_2, PG_3, PG_4, PG_5, PG_6, PG_CFG, PG_COUNT };
+enum { PG_FX = 0, PG_TR, PG_1, PG_2, PG_3, PG_4, PG_5, PG_6, PG_CFG, PG_PWR, PG_COUNT };
 static uint8_t page = PG_FX;
 
 struct ParamDef { uint8_t cc; const char* name; };
@@ -399,6 +399,22 @@ static void drawCfgPage() {
     d.drawString("CONFIG", 120, 208);
 }
 
+static void drawPowerPage() {
+    auto& d = M5Dial.Display;
+    d.fillScreen(TFT_BLACK);
+    d.drawCircle(120, 120, 118, C_RED_DIM);
+    d.setTextDatum(middle_center);
+    d.drawCircle(120, 86, 9, C_RED);
+    d.drawLine(120, 74, 120, 88, C_RED);
+    d.setFont(&fonts::Orbitron_Light_24);
+    d.setTextColor(C_RED, TFT_BLACK);
+    d.drawString("POWER", 120, 116);
+    d.setFont(&fonts::Font2);
+    d.setTextColor(TFT_DARKGREY, TFT_BLACK);
+    d.drawString("HOLD BUTTON 1.5s", 120, 152);
+    d.drawString("TO TURN OFF", 120, 170);
+}
+
 static void redraw() {
     if (page == PG_FX)
         drawFxPage();
@@ -406,6 +422,8 @@ static void redraw() {
         drawTransport();
     else if (page == PG_CFG)
         drawCfgPage();
+    else if (page == PG_PWR)
+        drawPowerPage();
     else
         drawParamPage();
 }
@@ -702,6 +720,8 @@ static void handleTouch() {
     case PG_CFG:
         handleCfgPage();
         break;
+    case PG_PWR:
+        break;
     default:
         handleParamPage();
         break;
@@ -799,7 +819,21 @@ void loop() {
         redraw();
     }
 
-    if (M5Dial.BtnA.pressedFor(1000) && !panicHeld && !menuTurn) {
+    if (page == PG_PWR) {
+        if (M5Dial.BtnA.pressedFor(1500) && !panicHeld && !menuTurn) {
+            panicHeld = true;
+            panicAll();
+            latchIdx = -1;
+            for (int i = 0; i < 20; i++) {
+                midiHandler.task();
+                outFlush();
+                delay(10);
+            }
+            M5Dial.Power.powerOff();
+            M5Dial.Display.setBrightness(0);
+            while (true) { delay(1000); }
+        }
+    } else if (M5Dial.BtnA.pressedFor(1000) && !panicHeld && !menuTurn) {
         panicHeld = true;
         panicAll();
         latchIdx = -1;

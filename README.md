@@ -12,7 +12,7 @@ SLOOP (2.7 and newer) plays the FM-1's 27 punch-in effects from MIDI: notes **F3
 
 ### Pages
 
-The round screen is a set of pages. **Hold the encoder button and turn the encoder** to move between pages, both ways (FX → TRANSPORT → FILTER → ... → CONFIG → FX); a plain click does nothing. Without the button held, the encoder does what the page is about: it scrolls the punch-in effects, changes the parameter pair, or changes a channel.
+The round screen is a set of pages. **Hold the encoder button and turn the encoder** to move between pages, both ways (FX → TRANSPORT → FILTER → ... → CONFIG → POWER → FX); a plain click does nothing. Without the button held, the encoder does what the page is about: it scrolls the punch-in effects, changes the parameter pair, or changes a channel.
 
 | Page | Controls |
 |---|---|
@@ -25,6 +25,7 @@ The round screen is a set of pages. **Hold the encoder button and turn the encod
 | **ENV** | ATK / DEC |
 | **RELEASE** | REL / GLIDE |
 | **CONFIG** | the MIDI channels, saved on the device |
+| **POWER** | hold the button 1.5 s to turn the device off |
 
 ### FX page (the 27 punch-in effects)
 
@@ -81,6 +82,10 @@ The MIDI channels used by the controller, saved in flash (they survive power cyc
 | DRUMS | CH 10 | GLO > DRUMS > CH |
 
 Tap a row to select it, then turn the encoder to change its channel (1..16, wrapping).
+
+### POWER page
+
+Hold the encoder button for **1.5 seconds** to turn the device off. On every other page that hold is the PANIC; here it powers down: a panic (all 27 effects off) is sent first, so nothing is left held on the FM-1 when the controller goes away. Works on battery power (the power latch is cut); while the Dial is powered from USB, the screen goes dark and the device halts.
 
 ## Parameter CC map
 
