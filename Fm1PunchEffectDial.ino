@@ -52,6 +52,8 @@ static const ParamDef PDEF[11] = {
     {74, "CUT"}, {71, "RES"}, {7, "LEVEL"}, {10, "PAN"}, {91, "REV"}, {93, "CHOR"},
     {94, "DLY"}, {73, "ATK"}, {75, "DEC"}, {72, "REL"}, {5, "GLIDE"}
 };
+static const bool    PMOM[11]      = {false, true, false, false, true, true, true, false, false, false, true};
+static const uint8_t PDEF_INIT[11] = {64, 0, 127, 64, 0, 0, 0, 64, 64, 64, 0};
 static const uint8_t     PAGE_X[6]    = {0, 4, 5, 2, 7, 9};
 static uint8_t           pageY[6]     = {1, 6, 10, 3, 8, 10};
 static const char* const PAGE_NAME[6] = {"FILTER", "SPACE", "MOTION", "MIX", "ENV", "RELEASE"};
@@ -95,6 +97,8 @@ static bool           chipArmed   = false;
 static unsigned long  lastPadSend = 0;
 static float          padX        = 120.0f;
 static float          padY        = 120.0f;
+static uint8_t        padSnapX    = 0;
+static uint8_t        padSnapY    = 0;
 static int8_t         activeTile  = -1;
 static bool           panicHeld   = false;
 static bool           menuTurn    = false;
@@ -421,10 +425,12 @@ static void applyPad(bool force) {
     if (chg) redraw();
 }
 
-static void padZeroNow() {
+static void padRestore() {
     uint8_t p = (uint8_t)(page - PG_1);
-    setVal(PAGE_X[p], 0);
-    setVal(pageY[p], 0);
+    uint8_t xi = PAGE_X[p];
+    uint8_t yi = pageY[p];
+    if (PMOM[xi]) setVal(xi, padSnapX);
+    if (PMOM[yi]) setVal(yi, padSnapY);
     redraw();
 }
 
@@ -600,9 +606,12 @@ static void handleParamPage() {
             chipArmed = true;
             redraw();
         } else if (pdist < 112.0f) {
+            uint8_t p = (uint8_t)(page - PG_1);
             padActive = true;
             padPressMs = millis();
             padPendDbl = padLastShort && padLastRel != 0 && (padPressMs - padLastRel) <= GAP_MAX;
+            padSnapX = ccVal[targetIdx][PAGE_X[p]];
+            padSnapY = ccVal[targetIdx][pageY[p]];
             padX = constrain(rx, 32.0f, 208.0f);
             padY = constrain(ry, 32.0f, 208.0f);
             applyPad(true);
@@ -639,7 +648,7 @@ static void handleParamPage() {
                 if (padHold) beepLatch(); else beepUnlatch();
                 redraw();
             } else if (!padHold) {
-                padZeroNow();
+                padRestore();
             }
             padPendDbl = false;
         }
@@ -761,7 +770,7 @@ void setup() {
 
     for (int t = 0; t < 5; t++)
         for (int i = 0; i < 11; i++)
-            ccVal[t][i] = 64;
+            ccVal[t][i] = PDEF_INIT[i];
 
     usbHost.begin();
 

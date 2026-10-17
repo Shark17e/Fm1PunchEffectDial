@@ -48,9 +48,9 @@ The finger position is the value: **X** is the left value (red), **Y** is the up
 | Gesture | Action |
 |---|---|
 | Touch / drag | Set both values live from the position |
-| Release (no HOLD) | Both values are sent back to 0 immediately |
+| Release (no HOLD) | **Momentary parameters** (REV, CHOR, DLY, RES, GLIDE) return to the value they had before the touch; **sticky parameters** (CUT, LEVEL, PAN, ATK, DEC, REL) stay where you put them |
 | Double-tap | **HOLD**: the values stay on release |
-| Exit HOLD (double-tap) | The values stay; the next touch and release sends them to 0 again |
+| Exit HOLD (double-tap) | The values stay; the next touch and release applies the same rule again |
 | Tap the chip on top | Target: **SEL** (the track selected on the FM-1) / **T1** / **T2** / **T3** / **DR** |
 | Rotate the encoder | Change the parameter pair: the Y value cycles through the other parameters |
 | Hold the button and turn the encoder | Move between pages |
